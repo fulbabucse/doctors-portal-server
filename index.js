@@ -68,7 +68,7 @@ const dbConnect = async () => {
           (slot) => !appointmentTime.includes(slot)
         );
 
-        option.slots = restAppointmentTime;
+        return (option.slots = restAppointmentTime);
       });
       res.send(options);
     });
@@ -90,6 +90,13 @@ const dbConnect = async () => {
 
       const result = await Bookings.insertOne(bookings);
       res.send(result);
+    });
+
+    app.get("/bookings", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const bookings = await Bookings.find(query).toArray();
+      res.send(bookings);
     });
   } finally {
   }
