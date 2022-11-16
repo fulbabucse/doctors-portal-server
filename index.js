@@ -27,30 +27,67 @@ const dbConnect = async () => {
 
     const Bookings = client.db("doctorsPortal").collection("bookings");
 
-    app.get("/appointmentOptions", async (req, res) => {
-      const date = req.query.date;
-      const query = {};
-      const options = await AppointmentOptions.find(query).toArray();
-      const bookingQuery = {
-        bookingDate: date,
-      };
-      const alreadyBooked = await Bookings.find(bookingQuery).toArray();
+    // Main Branches Booking Appointment
+    // app.get("/appointmentOptions", async (req, res) => {
+    //   const date = req.query.date;
+    //   const query = {};
+    //   const options = await AppointmentOptions.find(query).toArray();
+    //   const bookingQuery = {
+    //     bookingDate: date,
+    //   };
+    //   const alreadyBooked = await Bookings.find(bookingQuery).toArray();
 
+    //   options.map((option) => {
+    //     const optionBooked = alreadyBooked.filter(
+    //       (book) => book.treatment === option.name
+    //     );
+    //     const bookingTime = optionBooked.map((book) => book.appointmentTime);
+    //     const restBookingTime = option.slots.filter(
+    //       (appointmentTime) => !bookingTime.includes(appointmentTime)
+    //     );
+    //     option.slots = restBookingTime;
+    //   });
+    //   res.send(options);
+    // });
+
+    app.get("/appointmentOptions", async (req, res) => {
+      const query = {};
+      const date = req.query.date;
+      const options = await AppointmentOptions.find(query).toArray();
+      const bookingQuery = { bookingDate: date };
+      const alreadyBooked = await Bookings.find(bookingQuery).toArray();
       options.map((option) => {
         const optionBooked = alreadyBooked.filter(
           (book) => book.treatment === option.name
         );
-        const bookingTime = optionBooked.map((book) => book.appointmentTime);
-        const restBookingTime = option.slots.filter(
-          (appointmentTime) => !bookingTime.includes(appointmentTime)
+        const appointmentTime = optionBooked.map(
+          (book) => book.appointmentTime
         );
-        option.slots = restBookingTime;
+
+        const restAppointmentTime = option.slots.filter(
+          (slot) => !appointmentTime.includes(slot)
+        );
+
+        option.slots = restAppointmentTime;
       });
       res.send(options);
     });
 
     app.post("/bookings", async (req, res) => {
       const bookings = req.body;
+      const query = {
+        bookingDate: bookings.bookingDate,
+        treatment: bookings.treatment,
+        email: bookings.email,
+      };
+
+      const alreadyBooked = await Bookings.find(query).toArray();
+
+      if (alreadyBooked.length) {
+        const message = `You already have a booking on ${bookings.bookingDate}`;
+        return res.send({ acknowledged: false, message });
+      }
+
       const result = await Bookings.insertOne(bookings);
       res.send(result);
     });
