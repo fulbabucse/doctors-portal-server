@@ -133,7 +133,7 @@ const dbConnect = async () => {
       res.send(bookings);
     });
 
-    app.get("/users", async (req, res) => {
+    app.get("/users", JWTVerify, async (req, res) => {
       const query = {};
       const users = await Users.find(query).toArray();
       res.send(users);
