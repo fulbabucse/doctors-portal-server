@@ -1,4 +1,5 @@
 const express = require("express");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const app = express();
 const jwt = require("jsonwebtoken");
@@ -27,7 +28,6 @@ const JWTVerify = (req, res, next) => {
   });
 };
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
 const url = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.7ywptfp.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(url, {
   useNewUrlParser: true,
@@ -133,11 +133,45 @@ const dbConnect = async () => {
       res.send(bookings);
     });
 
+    app.get("/users", async (req, res) => {
+      const query = {};
+      const users = await Users.find(query).toArray();
+      res.send(users);
+    });
+
+    app.get("/users/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await Users.findOne(query);
+      res.send({ isAdmin: user?.role === "Admin" });
+    });
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await Users.insertOne(user);
       res.send(result);
       console.log(user);
+    });
+
+    app.put("/users/admin/:id", JWTVerify, async (req, res) => {
+      const decodedEmail = req.decoded.email;
+      const filterEmail = { email: decodedEmail };
+      const user = await Users.findOne(filterEmail);
+
+      if (user?.role !== "Admin") {
+        return res.status(401).send({ message: "Unauthorized Access" });
+      }
+
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const option = { upsert: true };
+      const updateInfo = {
+        $set: {
+          role: "Admin",
+        },
+      };
+      const result = await Users.updateOne(query, updateInfo, option);
+      res.send(result);
     });
   } finally {
   }
