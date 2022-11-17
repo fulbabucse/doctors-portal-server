@@ -150,7 +150,6 @@ const dbConnect = async () => {
       const user = req.body;
       const result = await Users.insertOne(user);
       res.send(result);
-      console.log(user);
     });
 
     app.put("/users/admin/:id", JWTVerify, async (req, res) => {
