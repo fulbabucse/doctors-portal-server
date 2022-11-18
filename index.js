@@ -43,6 +43,7 @@ const dbConnect = async () => {
 
     const Bookings = client.db("doctorsPortal").collection("bookings");
     const Users = client.db("doctorsPortal").collection("users");
+    const Doctors = client.db("doctorsPortal").collection("doctors");
 
     // Main Branches Booking Appointment
     // app.get("/appointmentOptions", async (req, res) => {
@@ -67,6 +68,12 @@ const dbConnect = async () => {
     //   res.send(options);
     // });
 
+    app.post("/doctors", async (req, res) => {
+      const doctor = req.body;
+      const result = await Doctors.insertOne(doctor);
+      res.send(result);
+    });
+
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
@@ -78,6 +85,14 @@ const dbConnect = async () => {
         return res.send({ accessToken: token });
       }
       res.status(401).send({ message: "unauthorized access" });
+    });
+
+    app.get("/appointmentSpeciality", async (req, res) => {
+      const query = {};
+      const result = await AppointmentOptions.find(query)
+        .project({ name: 1 })
+        .toArray();
+      res.send(result);
     });
 
     app.get("/appointmentOptions", async (req, res) => {
