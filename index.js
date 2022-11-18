@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Doctors Portal Server Running");
+  res.send("Welcome to Doctors Portal Server");
 });
 
 const JWTVerify = (req, res, next) => {
@@ -68,15 +68,33 @@ const dbConnect = async () => {
     //   res.send(options);
     // });
 
-    app.get("/doctors", async (req, res) => {
+    const verifyAdmin = async (req, res, next) => {
+      const decodedEmail = req.decoded.email;
+      const filterEmail = { email: decodedEmail };
+      const user = await Users.findOne(filterEmail);
+
+      if (user?.role !== "Admin") {
+        return res.status(401).send({ message: "Unauthorized Access" });
+      }
+      next();
+    };
+
+    app.get("/doctors", JWTVerify, verifyAdmin, async (req, res) => {
       const query = {};
       const doctors = await Doctors.find(query).toArray();
       res.send(doctors);
     });
 
-    app.post("/doctors", async (req, res) => {
+    app.post("/doctors", JWTVerify, verifyAdmin, async (req, res) => {
       const doctor = req.body;
       const result = await Doctors.insertOne(doctor);
+      res.send(result);
+    });
+
+    app.delete("/doctors/:id", JWTVerify, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await Doctors.deleteOne(query);
       res.send(result);
     });
 
@@ -173,15 +191,7 @@ const dbConnect = async () => {
       res.send(result);
     });
 
-    app.put("/users/admin/:id", JWTVerify, async (req, res) => {
-      const decodedEmail = req.decoded.email;
-      const filterEmail = { email: decodedEmail };
-      const user = await Users.findOne(filterEmail);
-
-      if (user?.role !== "Admin") {
-        return res.status(401).send({ message: "Unauthorized Access" });
-      }
-
+    app.put("/users/admin/:id", JWTVerify, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const option = { upsert: true };
