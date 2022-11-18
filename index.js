@@ -68,6 +68,12 @@ const dbConnect = async () => {
     //   res.send(options);
     // });
 
+    app.get("/doctors", async (req, res) => {
+      const query = {};
+      const doctors = await Doctors.find(query).toArray();
+      res.send(doctors);
+    });
+
     app.post("/doctors", async (req, res) => {
       const doctor = req.body;
       const result = await Doctors.insertOne(doctor);
@@ -80,7 +86,7 @@ const dbConnect = async () => {
       const user = await Users.findOne(query);
       if (user) {
         const token = jwt.sign({ email }, process.env.JWT_ACCESS_TOKEN, {
-          expiresIn: "2hr",
+          expiresIn: "1d",
         });
         return res.send({ accessToken: token });
       }
