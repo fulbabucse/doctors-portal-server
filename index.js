@@ -122,7 +122,9 @@ const dbConnect = async () => {
     app.get("/appointmentOptions", async (req, res) => {
       const query = {};
       const date = req.query.date;
-      const options = await AppointmentOptions.find(query).toArray();
+      const options = await AppointmentOptions.find(query)
+        .sort({ price: 1 })
+        .toArray();
       const bookingQuery = { bookingDate: date };
       const alreadyBooked = await Bookings.find(bookingQuery).toArray();
       options.map((option) => {
@@ -170,6 +172,13 @@ const dbConnect = async () => {
       const query = { email: email };
       const bookings = await Bookings.find(query).toArray();
       res.send(bookings);
+    });
+
+    app.get("/bookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const booking = await Bookings.findOne(query);
+      res.send(booking);
     });
 
     app.get("/users", JWTVerify, async (req, res) => {
