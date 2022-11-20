@@ -111,7 +111,7 @@ const dbConnect = async () => {
       res.send(result);
     });
 
-    app.get("/doctors", JWTVerify, verifyAdmin, async (req, res) => {
+    app.get("/doctors", async (req, res) => {
       const query = {};
       const doctors = await Doctors.find(query).toArray();
       res.send(doctors);
