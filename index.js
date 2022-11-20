@@ -45,6 +45,7 @@ const dbConnect = async () => {
     const Bookings = client.db("doctorsPortal").collection("bookings");
     const Users = client.db("doctorsPortal").collection("users");
     const Doctors = client.db("doctorsPortal").collection("doctors");
+    const Payments = client.db("doctorsPortal").collection("payments");
 
     // Main Branches Booking Appointment
     // app.get("/appointmentOptions", async (req, res) => {
@@ -93,6 +94,21 @@ const dbConnect = async () => {
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    });
+
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      const result = await Payments.insertOne(payment);
+      const id = payment.bookingId;
+      const query = { _id: ObjectId(id) };
+      const updatedInfo = {
+        $set: {
+          paid: true,
+          transectionId: payment.transectionId,
+        },
+      };
+      const updated = await Bookings.updateOne(query, updatedInfo);
+      res.send(result);
     });
 
     app.get("/doctors", JWTVerify, verifyAdmin, async (req, res) => {
